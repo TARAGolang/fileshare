@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -49,9 +51,37 @@ func main() {
 		}
 		return false, nil
 	}))
-	g.GET("/new", func(c echo.Context) error {
+	g.GET("/gen", func(c echo.Context) error {
 		fn := c.QueryParam("file")
 		if len(fn) > 0 {
+			return c.String(http.StatusOK, str.Set(fn))
+		}
+		return c.String(http.StatusBadRequest, "Bad request")
+	})
+	g.POST("/upload", func(c echo.Context) error {
+		f, err := c.FormFile("file")
+		if err != nil {
+			return err
+		}
+		if len(f.Filename) > 0 {
+			src, err := f.Open()
+			if err != nil {
+				return err
+			}
+			defer src.Close()
+
+			fn := filepath.Base(f.Filename)
+			// Destination
+			dst, err := os.Create(fn)
+			if err != nil {
+				return err
+			}
+			defer dst.Close()
+
+			// Copy
+			if _, err = io.Copy(dst, src); err != nil {
+				return err
+			}
 			return c.String(http.StatusOK, str.Set(fn))
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
