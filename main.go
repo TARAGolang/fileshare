@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -28,6 +29,8 @@ func main() {
 
 	if err := os.MkdirAll(*fpath, 0644); err != nil {
 		log.Fatal(err)
+	} else {
+		log.Println("Use path", *fpath)
 	}
 
 	str := store.NewStore()
@@ -73,6 +76,9 @@ func main() {
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
+	g.GET("/upload", func(c echo.Context) error {
+		return c.HTML(http.StatusOK, indexhtml)
+	})
 	g.POST("/upload", func(c echo.Context) error {
 		f, err := c.FormFile("file")
 		if err != nil {
@@ -85,7 +91,8 @@ func main() {
 			}
 			defer src.Close()
 
-			fn := filepath.Join(*fpath, filepath.Base(f.Filename))
+			fnb := filepath.Base(f.Filename)
+			fn := filepath.Join(*fpath, fnb)
 			// Destination
 			dst, err := os.Create(fn)
 			if err != nil {
@@ -97,7 +104,15 @@ func main() {
 			if _, err = io.Copy(dst, src); err != nil {
 				return err
 			}
-			return c.String(http.StatusOK, str.Set(fn))
+			u := &url.URL{}
+			*u = *c.Request().URL
+			u.Path = "/" + fnb
+			u.Host = c.Request().Host
+			u.Scheme = "http"
+			key := str.Set(fn)
+			uv := url.Values{"key": []string{key}}
+			u.RawQuery = uv.Encode()
+			return c.String(http.StatusOK, u.String())
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
