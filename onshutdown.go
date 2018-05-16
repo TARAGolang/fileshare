@@ -12,6 +12,6 @@ func onShutdown(f func()) {
 	go func() {
 		<-sigc
 		f()
-		os.Exit(1)
+		// os.Exit(1)
 	}()
 }

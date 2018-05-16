@@ -121,7 +121,6 @@ func main() {
 	})
 	onShutdown(func() {
 		str.Save()
-		os.Exit(1)
 	})
 	e.Logger.Fatal(e.Start(*addr))
 }
