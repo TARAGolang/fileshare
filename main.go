@@ -43,6 +43,9 @@ func main() {
 		time.Sleep(3 * time.Second)
 		return c.String(http.StatusOK, "Hello, World!")
 	})
+	e.GET("/favicon.ico", func(c echo.Context) error {
+		return c.NoContent(http.StatusOK)
+	})
 	e.GET("/:fname", func(c echo.Context) error {
 		key := c.QueryParam("key")
 		if len(key) > 0 {
