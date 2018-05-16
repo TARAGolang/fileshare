@@ -17,6 +17,7 @@ import (
 var (
 	secret = flag.String("secret", "", "secret string for admin API")
 	addr   = flag.String("listen", ":8000", "listen to addr:port")
+	fpath  = flag.String("path", "/usr/share/covromfs/", "path to file share")
 )
 
 func main() {
@@ -24,7 +25,13 @@ func main() {
 	if len(*secret) == 0 {
 		log.Fatal("Secret not found, please set -secret parameter")
 	}
+
+	if err := os.MkdirAll(*fpath, 0644); err != nil {
+		log.Fatal(err)
+	}
+
 	str := store.NewStore()
+	blist := NewBlackList()
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Recover())
@@ -46,9 +53,17 @@ func main() {
 	})
 	g := e.Group("/newlink")
 	g.Use(middleware.BasicAuth(func(username, password string, ctx echo.Context) (bool, error) {
+		ip := ctx.RealIP()
+		if len(ip) == 0 {
+			ip = ctx.Request().RemoteAddr
+		}
+		if blist.IsBlack(ip) {
+			return false, nil
+		}
 		if username == "admin" && password == *secret {
 			return true, nil
 		}
+		blist.PaintBlack(ip)
 		return false, nil
 	}))
 	g.GET("/gen", func(c echo.Context) error {
@@ -70,7 +85,7 @@ func main() {
 			}
 			defer src.Close()
 
-			fn := filepath.Base(f.Filename)
+			fn := filepath.Join(*fpath, filepath.Base(f.Filename))
 			// Destination
 			dst, err := os.Create(fn)
 			if err != nil {
