@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -81,9 +80,15 @@ func main() {
 	g.GET("/gen", func(c echo.Context) error {
 		fn := c.QueryParam("file")
 		if len(fn) > 0 {
-			return c.String(http.StatusOK, str.Set(fn))
+			fnb := filepath.Base(fn)
+			fname := filepath.Join(*fpath, fnb)
+			_, err := os.Stat(fname)
+			if err != nil {
+				return c.NoContent(http.StatusBadRequest)
+			}
+			return c.String(http.StatusOK, createLink(c.Request(), fnb, str.Set(fname)))
 		}
-		return c.String(http.StatusBadRequest, "Bad request")
+		return c.NoContent(http.StatusBadRequest)
 	})
 
 	g.GET("/upload", func(c echo.Context) error {
@@ -115,15 +120,7 @@ func main() {
 			if _, err = io.Copy(dst, src); err != nil {
 				return err
 			}
-			u := &url.URL{}
-			*u = *c.Request().URL
-			u.Path = "/" + fnb
-			u.Host = c.Request().Host
-			u.Scheme = "http"
-			key := str.Set(fn)
-			uv := url.Values{"key": []string{key}}
-			u.RawQuery = uv.Encode()
-			return c.String(http.StatusOK, u.String())
+			return c.String(http.StatusOK, createLink(c.Request(), fnb, str.Set(fn)))
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
@@ -131,6 +128,6 @@ func main() {
 	onShutdown(func() {
 		str.Save()
 	})
-	
+
 	e.Logger.Fatal(e.Start(*addr))
 }
