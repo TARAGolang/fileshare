@@ -119,5 +119,9 @@ func main() {
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
+	onShutdown(func() {
+		str.Save()
+		os.Exit(1)
+	})
 	e.Logger.Fatal(e.Start(*addr))
 }
