@@ -35,17 +35,21 @@ func main() {
 
 	str := store.NewStore()
 	blist := NewBlackList()
+
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
+
 	e.GET("/", func(c echo.Context) error {
 		time.Sleep(3 * time.Second)
 		return c.String(http.StatusOK, "Hello, World!")
 	})
+
 	e.GET("/favicon.ico", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
+
 	e.GET("/:fname", func(c echo.Context) error {
 		key := c.QueryParam("key")
 		if len(key) > 0 {
@@ -57,6 +61,7 @@ func main() {
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
+
 	g := e.Group("/newlink")
 	g.Use(middleware.BasicAuth(func(username, password string, ctx echo.Context) (bool, error) {
 		ip := ctx.RealIP()
@@ -72,6 +77,7 @@ func main() {
 		blist.PaintBlack(ip)
 		return false, nil
 	}))
+
 	g.GET("/gen", func(c echo.Context) error {
 		fn := c.QueryParam("file")
 		if len(fn) > 0 {
@@ -79,9 +85,11 @@ func main() {
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
+
 	g.GET("/upload", func(c echo.Context) error {
 		return c.HTML(http.StatusOK, indexhtml)
 	})
+
 	g.POST("/upload", func(c echo.Context) error {
 		f, err := c.FormFile("file")
 		if err != nil {
@@ -119,8 +127,10 @@ func main() {
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
+
 	onShutdown(func() {
 		str.Save()
 	})
+	
 	e.Logger.Fatal(e.Start(*addr))
 }
