@@ -73,6 +73,7 @@ func (s *Store) Save() {
 	}
 	defer f.Close()
 	enc := json.NewEncoder(f)
+	enc.SetIndent("","    ")
 	enc.Encode(s)
 }
 
