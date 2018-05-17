@@ -55,16 +55,24 @@ func main() {
 	})
 
 	e.GET("/:fname", func(c echo.Context) error {
-		// TODO: block brute force
+		ip := c.RealIP()
+		if len(ip) == 0 {
+			ip = c.Request().RemoteAddr
+		}
+		if blist.IsBlack(ip) {
+			return c.String(http.StatusBadRequest, "You are banned. Try tommorow.")
+		}
 		key := c.QueryParam("key")
 		if len(key) > 0 {
 			fn, err := str.Get(key)
 			if err != nil {
-				return c.String(http.StatusBadRequest, "Bad request")
+				blist.PaintBlack(ip)
+				return c.String(http.StatusBadRequest, "Bad request. You can be blocked when trying to send incorrect request!")
 			}
 			return c.Attachment(fn, filepath.Base(fn))
 		}
-		return c.String(http.StatusBadRequest, "Bad request")
+		blist.PaintBlack(ip)
+		return c.String(http.StatusBadRequest, "Bad request. You can be blocked when trying to send incorrect request!")
 	})
 
 	g := e.Group("/newlink")
