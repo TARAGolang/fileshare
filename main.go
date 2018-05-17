@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -37,6 +39,9 @@ func main() {
 
 	e := echo.New()
 	e.HideBanner = true
+	e.Renderer = &Template{
+		templates: template.Must(template.New("upload.html").Parse(indexhtml)),
+	}
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 
@@ -50,6 +55,7 @@ func main() {
 	})
 
 	e.GET("/:fname", func(c echo.Context) error {
+		// TODO: block brute force
 		key := c.QueryParam("key")
 		if len(key) > 0 {
 			fn, err := str.Get(key)
@@ -62,6 +68,7 @@ func main() {
 	})
 
 	g := e.Group("/newlink")
+
 	g.Use(middleware.BasicAuth(func(username, password string, ctx echo.Context) (bool, error) {
 		ip := ctx.RealIP()
 		if len(ip) == 0 {
@@ -92,7 +99,17 @@ func main() {
 	})
 
 	g.GET("/upload", func(c echo.Context) error {
-		return c.HTML(http.StatusOK, indexhtml)
+		files, err := ioutil.ReadDir(*fpath)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, err.Error())
+		}
+		allf := make([]string, 0, len(files))
+		for _, info := range files {
+			if info.Mode().IsRegular() {
+				allf = append(allf, info.Name())
+			}
+		}
+		return c.Render(http.StatusOK, "upload.html", allf)
 	})
 
 	g.POST("/upload", func(c echo.Context) error {
