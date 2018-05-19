@@ -10,7 +10,7 @@ func createLink(c *http.Request, fnb, key string) string {
 	*u = *c.URL
 	u.Path = "/" + fnb
 	u.Host = c.Host
-	u.Scheme = "http"
+	u.Scheme = "https"
 	uv := url.Values{"key": []string{key}}
 	u.RawQuery = uv.Encode()
 	return u.String()

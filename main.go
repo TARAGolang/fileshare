@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -9,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/covrom/fileshare/store"
 	"github.com/labstack/echo"
@@ -18,8 +18,14 @@ import (
 
 var (
 	secret = flag.String("secret", "", "secret string for admin API")
-	addr   = flag.String("listen", ":8000", "listen to addr:port")
+	addr   = flag.String("listen", ":443", "listen to addr:port")
 	fpath  = flag.String("path", "/usr/share/covromfs/", "path to file share")
+	// https://tech.yandex.ru/money/doc/dg/reference/notification-p2p-incoming-docpage/
+	// https://money.yandex.ru/myservices/online.xml
+	yakey    = flag.String("yakey", "", "secret string for Yandex Money incoming payments")
+	mailfrom = flag.String("mailfrom", "", "email from")
+	mailpass = flag.String("mailpass", "", "password for email from")
+	mailsrv  = flag.String("mailsrv", "smtp.yandex.ru:465", "mail server (smtp ssl)")
 )
 
 func main() {
@@ -46,8 +52,7 @@ func main() {
 	e.Use(middleware.Logger())
 
 	e.GET("/", func(c echo.Context) error {
-		time.Sleep(3 * time.Second)
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.Redirect(http.StatusOK, "https://www.tsov.pro")
 	})
 
 	e.GET("/favicon.ico", func(c echo.Context) error {
@@ -150,9 +155,54 @@ func main() {
 		return c.String(http.StatusBadRequest, "Bad request")
 	})
 
+	if len(*yakey) > 0 {
+		e.POST("/yapayment", func(c echo.Context) error {
+			yap := &YaParams{}
+			if err := c.Bind(yap); err != nil {
+				return c.NoContent(http.StatusOK)
+			}
+
+			e.Logger.Info("Receive payment:\n", yap)
+
+			if err := yap.CheckSha1(*yakey); err != nil {
+				e.Logger.Error("Wrong SHA1")
+				return c.NoContent(http.StatusOK)
+			}
+
+			fixprices := map[string]string{
+				"kanban.zip": "10000.00",
+			}
+
+			fnb := filepath.Base(yap.Label)
+
+			if am, ok := fixprices[fnb]; ok && am != yap.WithDrawAmount {
+				e.Logger.Error("Wrong price:", yap.WithDrawAmount)
+				return c.NoContent(http.StatusOK)
+			}
+
+			fname := filepath.Join(*fpath, fnb)
+			_, err := os.Stat(fname)
+			if err != nil {
+				e.Logger.Error("File not exists:", fname)
+				return c.NoContent(http.StatusOK)
+			}
+
+			if err := SendMail(yap.Email, "Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
+Ссылка действительна в течение одного дня!
+Если Вам не удается сачать файл, напишите пожалуйста письмо на rs@tsov.pro`,
+				createLink(c.Request(), fnb, str.Set(fname)))); err != nil {
+				e.Logger.Error(err.Error())
+				return c.NoContent(http.StatusOK)
+			}
+
+			return c.NoContent(http.StatusOK)
+		})
+	}
+
 	onShutdown(func() {
 		str.Save()
 	})
 
-	e.Logger.Fatal(e.Start(*addr))
+	e.Logger.Fatal(e.StartAutoTLS(*addr))
+	// e.Logger.Fatal(e.Start(*addr))
 }
