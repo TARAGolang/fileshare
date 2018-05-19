@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -17,6 +18,10 @@ import (
 )
 
 var (
+	testmode  = flag.Bool("t", false, "send testing mail with link to file")
+	testfile  = flag.String("f", "kanban.zip", "file for send testing mail")
+	testemail = flag.String("e", "rs@tsov.pro", "email for send testing mail")
+
 	secret = flag.String("secret", "", "secret string for admin API")
 	addr   = flag.String("listen", ":443", "listen to addr:port")
 	fpath  = flag.String("path", "/usr/share/covromfs/", "path to file share")
@@ -30,6 +35,31 @@ var (
 
 func main() {
 	flag.Parse()
+
+	str := store.NewStore()
+	blist := NewBlackList()
+
+	if *testmode {
+		fnb := filepath.Base(*testfile)
+		fname := filepath.Join(*fpath, fnb)
+		_, err := os.Stat(fname)
+		if err != nil {
+			fmt.Println("File not exists:", fname)
+			return
+		}
+
+		u := &url.URL{}
+
+		if err := SendMail(*testemail, "Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
+Ссылка действительна в течение одного дня!
+Если Вам не удается сачать файл, напишите пожалуйста письмо на rs@tsov.pro`,
+			createLinkFromURL(u, "localhost", fnb, str.Set(fname)))); err != nil {
+			fmt.Println(err.Error())
+		}
+
+		return
+	}
+
 	if len(*secret) == 0 {
 		log.Fatal("Secret not found, please set -secret parameter")
 	}
@@ -40,9 +70,6 @@ func main() {
 		log.Println("Use path", *fpath)
 	}
 
-	str := store.NewStore()
-	blist := NewBlackList()
-
 	e := echo.New()
 	e.HideBanner = true
 	e.Renderer = &Template{
@@ -52,7 +79,7 @@ func main() {
 	e.Use(middleware.Logger())
 
 	e.GET("/", func(c echo.Context) error {
-		return c.Redirect(http.StatusOK, "https://www.tsov.pro")
+		return c.String(http.StatusOK, "https://www.tsov.pro")
 	})
 
 	e.GET("/favicon.ico", func(c echo.Context) error {
