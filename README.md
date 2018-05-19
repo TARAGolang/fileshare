@@ -1,6 +1,7 @@
 # fileshare
 File sharing service with individual temporary link generation.
 Uses a simple basic auth, but blocks any brute force attack.
+It can receive payments for files with Yandex Money!
 
 
 Usage: `./fileshare -secret 123 -path "./store"`
