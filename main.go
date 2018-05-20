@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -21,6 +22,9 @@ var (
 	testmode  = flag.Bool("t", false, "send testing mail with link to file")
 	testfile  = flag.String("f", "kanban.zip", "file for send testing mail")
 	testemail = flag.String("e", "rs@tsov.pro", "email for send testing mail")
+
+	logfile       = flag.String("log", "", "log file")
+	fixpricesfile = flag.String("fixp", "", "fix prices JSON file")
 
 	secret = flag.String("secret", "", "secret string for admin API")
 	addr   = flag.String("listen", ":443", "listen to addr:port")
@@ -52,8 +56,8 @@ func main() {
 
 		if err := SendMail(*testemail, "Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
 Ссылка действительна в течение одного дня!
-Если Вам не удается сачать файл, напишите пожалуйста письмо на rs@tsov.pro`,
-			createLinkFromURL(u, "localhost", fnb, str.Set(fname)))); err != nil {
+Если Вам не удается сачать файл, напишите пожалуйста письмо на %s`,
+			createLinkFromURL(u, "localhost", fnb, str.Set(fname)), *mailfrom)); err != nil {
 			fmt.Println(err.Error())
 		}
 
@@ -70,13 +74,53 @@ func main() {
 		log.Println("Use path", *fpath)
 	}
 
+	fixprices := map[string]string{
+		// "kanban.zip": "10000.00",
+	}
+	if len(*fixpricesfile) > 0 {
+		if fixf, err := os.Open(*fixpricesfile); err != nil {
+			log.Fatal(err)
+		} else {
+			jr := json.NewDecoder(fixf)
+			if err := jr.Decode(&fixprices); err != nil {
+				fixf.Close()
+				log.Fatal(err)
+			}
+			fixf.Close()
+		}
+
+	}
+
 	e := echo.New()
 	e.HideBanner = true
 	e.Renderer = &Template{
 		templates: template.Must(template.New("upload.html").Parse(indexhtml)),
 	}
 	e.Use(middleware.Recover())
-	e.Use(middleware.Logger())
+
+	var logf *os.File
+
+	if len(*logfile) > 0 {
+		var err error
+
+		logf, err = os.OpenFile(*logfile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0640)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer logf.Close()
+
+		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+			Skipper: middleware.DefaultSkipper,
+			Format: `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}","host":"${host}",` +
+				`"method":"${method}","uri":"${uri}","status":${status}, "latency":${latency},` +
+				`"latency_human":"${latency_human}","bytes_in":${bytes_in},` +
+				`"bytes_out":${bytes_out}}` + "\n",
+			CustomTimeFormat: "2006-01-02 15:04:05.00000",
+			Output:           logf,
+		}))
+	} else {
+		e.Use(middleware.Logger())
+	}
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "https://www.tsov.pro")
@@ -196,10 +240,6 @@ func main() {
 				return c.NoContent(http.StatusOK)
 			}
 
-			fixprices := map[string]string{
-				"kanban.zip": "10000.00",
-			}
-
 			fnb := filepath.Base(yap.Label)
 
 			if am, ok := fixprices[fnb]; ok && am != yap.WithDrawAmount {
@@ -216,8 +256,8 @@ func main() {
 
 			if err := SendMail(yap.Email, "Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
 Ссылка действительна в течение одного дня!
-Если Вам не удается сачать файл, напишите пожалуйста письмо на rs@tsov.pro`,
-				createLink(c.Request(), fnb, str.Set(fname)))); err != nil {
+Если Вам не удается сачать файл, напишите пожалуйста письмо на %s`,
+				createLink(c.Request(), fnb, str.Set(fname)), *mailfrom)); err != nil {
 				e.Logger.Error(err.Error())
 				return c.NoContent(http.StatusOK)
 			}
@@ -228,8 +268,17 @@ func main() {
 
 	onShutdown(func() {
 		str.Save()
+		if logf != nil {
+			logf.Close()
+		}
 	})
 
-	e.Logger.Fatal(e.StartAutoTLS(*addr))
-	// e.Logger.Fatal(e.Start(*addr))
+	e.Logger.Print(e.StartAutoTLS(*addr))
+	// e.Logger.Print(e.Start(*addr))
+
+	if logf != nil {
+		logf.Close()
+	}
+
+	os.Exit(1)
 }
