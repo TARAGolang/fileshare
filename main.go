@@ -233,7 +233,7 @@ func main() {
 				return c.NoContent(http.StatusOK)
 			}
 
-			e.Logger.Info("Receive payment:\n", yap)
+			e.Logger.Warn("Receive payment:\n", yap)
 
 			if err := yap.CheckSha1(*yakey); err != nil {
 				e.Logger.Error("Wrong SHA1")
@@ -273,8 +273,8 @@ func main() {
 		}
 	})
 
-	e.Logger.Print(e.StartAutoTLS(*addr))
-	// e.Logger.Print(e.Start(*addr))
+	e.Logger.Error(e.StartAutoTLS(*addr))
+	// e.Logger.Error(e.Start(*addr))
 
 	if logf != nil {
 		logf.Close()
