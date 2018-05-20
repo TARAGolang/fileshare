@@ -1,0 +1,25 @@
+LogFile = ""
+
+# basic auth password for "admin" API
+AdminPassword = "123"
+
+# listen https to addr:port
+Listen = ":8000"
+
+# path to file share
+Path = ""
+
+# Yandex Money secret string
+# https://tech.yandex.ru/money/doc/dg/reference/notification-p2p-incoming-docpage/
+# https://money.yandex.ru/myservices/online.xml
+YaKey = ""
+
+# SMTP TLS/SSL server auth for sending emails
+MailSrv = "smtp.yandex.ru:465"
+MailFrom = ""
+MailPass = ""
+
+# fix prices for files
+[FixPrices]
+    "kanban.zip" = "10000.00"
+

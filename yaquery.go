@@ -52,7 +52,7 @@ func (yp *YaParams) CheckSha1(nsecret string) error {
 }
 
 func SendMail(email, subj, body string) error {
-	from := mail.Address{"", *mailfrom}
+	from := mail.Address{"", conf.MailFrom}
 	to := mail.Address{"", email}
 
 	// Setup headers
@@ -69,11 +69,11 @@ func SendMail(email, subj, body string) error {
 	message += "\r\n" + body
 
 	// Connect to the SMTP Server
-	servername := *mailsrv
+	servername := conf.MailSrv
 
 	host, _, _ := net.SplitHostPort(servername)
 
-	auth := smtp.PlainAuth("", *mailfrom, *mailpass, host)
+	auth := smtp.PlainAuth("", conf.MailFrom, conf.MailPass, host)
 
 	// TLS config
 	tlsconfig := &tls.Config{
