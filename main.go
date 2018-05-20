@@ -16,6 +16,7 @@ import (
 	"github.com/covrom/fileshare/store"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 var (
@@ -272,6 +273,7 @@ func main() {
 		}
 	})
 
+	e.AutoTLSManager.Cache = autocert.DirCache("./.cache")
 	e.Logger.Error(e.StartAutoTLS(conf.Listen))
 	// e.Logger.Error(e.Start(conf.Listen))
 
