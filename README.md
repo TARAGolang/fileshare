@@ -19,6 +19,8 @@ API:
 
 `GET /newlink/gen?file=file.name` - generate new unique link for file.name (must be exists in store cache), that expired after 1 day
 
+`POST /yapayment` - receive notification from Yandex.Money service, see below.
+
 
 You can receive payment for files with Yandex.Money API and automatically send unique link by email.
 See https://tech.yandex.ru/money/doc/dg/reference/notification-p2p-incoming-docpage/
