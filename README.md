@@ -4,7 +4,9 @@ Uses a simple basic auth, but blocks any brute force attack.
 It can receive payments for files with Yandex Money!
 
 
-Usage: `./fileshare -secret 123 -path "./store"`
+Usage: `./fileshare -c "./config.toml"`
+
+See `_example` for example of config.toml
 
 
 API:
