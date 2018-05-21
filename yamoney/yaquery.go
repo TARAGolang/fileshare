@@ -1,4 +1,4 @@
-package main
+package yamoney
 
 import (
 	"crypto/sha1"
@@ -51,8 +51,8 @@ func (yp *YaParams) CheckSha1(nsecret string) error {
 	return nil
 }
 
-func SendMail(email, subj, body string) error {
-	from := mail.Address{"", conf.MailFrom}
+func SendMail(mailsrv, mailfrom, mailpass, email, subj, body string) error {
+	from := mail.Address{"", mailfrom}
 	to := mail.Address{"", email}
 
 	// Setup headers
@@ -69,11 +69,10 @@ func SendMail(email, subj, body string) error {
 	message += "\r\n" + body
 
 	// Connect to the SMTP Server
-	servername := conf.MailSrv
 
-	host, _, _ := net.SplitHostPort(servername)
+	host, _, _ := net.SplitHostPort(mailsrv)
 
-	auth := smtp.PlainAuth("", conf.MailFrom, conf.MailPass, host)
+	auth := smtp.PlainAuth("", mailfrom, mailpass, host)
 
 	// TLS config
 	tlsconfig := &tls.Config{
@@ -85,7 +84,7 @@ func SendMail(email, subj, body string) error {
 	// for smtp servers running on 465 that require an ssl connection
 	// from the very beginning (no starttls)
 
-	conn, err := tls.Dial("tcp", servername, tlsconfig)
+	conn, err := tls.Dial("tcp", mailsrv, tlsconfig)
 	if err != nil {
 		return err
 	}

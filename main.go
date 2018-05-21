@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -13,7 +12,10 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/covrom/fileshare/blacklist"
+	"github.com/covrom/fileshare/pages"
 	"github.com/covrom/fileshare/store"
+	"github.com/covrom/fileshare/yamoney"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
@@ -60,7 +62,7 @@ func main() {
 	log.Println("Fix prices:", conf.FixPrices)
 
 	str := store.NewStore()
-	blist := NewBlackList()
+	blist := blacklist.NewBlackList()
 
 	if *testmode {
 
@@ -74,10 +76,11 @@ func main() {
 
 		u := &url.URL{}
 
-		if err := SendMail(*testemail, "Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
+		if err := yamoney.SendMail(conf.MailSrv, conf.MailFrom, conf.MailPass, *testemail,
+			"Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
 Ссылка действительна в течение одного дня!
 Если Вам не удается сачать файл, напишите пожалуйста письмо на %s`,
-			createLinkFromURL(u, "localhost", fnb, str.Set(fname)), conf.MailFrom)); err != nil {
+				createLinkFromURL(u, "localhost", fnb, str.Set(fname)), conf.MailFrom)); err != nil {
 			fmt.Println(err.Error())
 		}
 
@@ -98,9 +101,7 @@ func main() {
 
 	e := echo.New()
 	e.HideBanner = true
-	e.Renderer = &Template{
-		templates: template.Must(template.New("upload.html").Parse(indexhtml)),
-	}
+	e.Renderer = pages.MainRenderer()
 	e.Use(middleware.Recover())
 
 	var logf *os.File
@@ -227,7 +228,8 @@ func main() {
 
 	if len(conf.YaKey) > 0 {
 		e.POST("/yapayment", func(c echo.Context) error {
-			yap := &YaParams{}
+			yap := &yamoney.YaParams{}
+
 			if err := c.Bind(yap); err != nil {
 				return c.NoContent(http.StatusOK)
 			}
@@ -253,10 +255,11 @@ func main() {
 				return c.NoContent(http.StatusOK)
 			}
 
-			if err := SendMail(yap.Email, "Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
+			if err := yamoney.SendMail(conf.MailSrv, conf.MailFrom, conf.MailPass, yap.Email,
+				"Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
 Ссылка действительна в течение одного дня!
 Если Вам не удается сачать файл, напишите пожалуйста письмо на %s`,
-				createLink(c.Request(), fnb, str.Set(fname)), conf.MailFrom)); err != nil {
+					createLink(c.Request(), fnb, str.Set(fname)), conf.MailFrom)); err != nil {
 				e.Logger.Error(err.Error())
 				return c.NoContent(http.StatusOK)
 			}

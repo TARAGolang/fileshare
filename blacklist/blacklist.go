@@ -1,4 +1,4 @@
-package main
+package blacklist
 
 import (
 	"log"
@@ -61,17 +61,17 @@ func (l *BlackList) PaintBlack(ip string) bool {
 }
 
 func (l *BlackList) Clear() {
-	for {
+	tick := time.Tick(time.Hour)
+	for range tick {
 		l.Lock()
 		for k, v := range l.m {
 			// ban one day
+			log.Println("Banned", k)
 			if v.cnt >= banCnt && time.Now().After(v.la.Add(banHrs*time.Hour)) {
 				delete(l.m, k)
 			}
-			log.Println("Banned", k)
 		}
 		l.allcnt = 0
 		l.Unlock()
-		time.Sleep(time.Hour)
 	}
 }
