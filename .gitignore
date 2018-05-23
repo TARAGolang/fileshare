@@ -12,4 +12,6 @@
 *.out
 fileshare
 store.json
-
+config.toml
+key.pem
+cert.pem

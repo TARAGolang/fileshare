@@ -151,6 +151,10 @@ func main() {
 		return c.String(http.StatusBadRequest, "Bad request. You can be blocked when trying to send incorrect request!")
 	})
 
+	e.GET("/buy/files", func(c echo.Context) error {
+		return c.Render(http.StatusOK, "payment.html", conf.FixPrices)
+	})
+
 	g := e.Group("/newlink")
 
 	g.Use(middleware.BasicAuth(func(username, password string, ctx echo.Context) (bool, error) {

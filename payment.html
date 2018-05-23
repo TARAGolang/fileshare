@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" type="text/css">
+    <title>Приобретение файлов</title>
+</head>
+
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">
+                Приобретение файлов
+            </h1>
+            <p>Вы можете приобрести эти файлы через платежную систему Яндекс.Деньги:</p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Имя файла</th>
+                        <th>Стоимость (руб.)</th>
+                        <th>Оплата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $key, $value := .}}
+                    <tr>
+                        <td style="vertical-align: middle;">
+                            <p>{{$key}}</p>
+                        </td>
+                        <td style="text-align: right; vertical-align: middle;">
+                            <p>{{$value}}</p>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <form method="POST" action="https://money.yandex.ru/quickpay/confirm.xml">
+                                <input type="hidden" name="receiver" value="41001851773851">
+                                <input type="hidden" name="label" value="{{$key}}">
+                                <input type="hidden" name="quickpay-form" value="shop">
+                                <input type="hidden" name="targets" value="Оплата за {{$key}}">
+                                <input type="hidden" name="sum" value="{{$value}}" data-type="number">
+                                <input type="hidden" name="need-fio" value="true">
+                                <input type="hidden" name="need-email" value="true">
+                                <input type="hidden" name="need-phone" value="false">
+                                <input type="hidden" name="need-address" value="false">
+                                <div class="level-item">
+                                    <div class="field has-addons">
+                                        <p class="control">
+                                            <div class="select">
+                                                <select name="paymentType">
+                                                    <option value="PC">Яндекс.Деньгами</option>
+                                                    <option selected value="AC">Банковской картой</option>
+                                                </select>
+                                            </div>
+                                        </p>
+                                        <p class="control">
+                                            <input class="button is-primary" type="submit" value="Оплатить">
+                                        </p>
+                                    </div>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</body>
+
+</html>
