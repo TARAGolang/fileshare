@@ -4,12 +4,21 @@ Uses a simple basic auth, but blocks any brute force attack.
 It can receive payments for files with Yandex Money!
 
 
+## Simple usage
+
 Usage: `./fileshare -c "./config.toml"`
 
+And now you must define settings in config.toml.
 See `_example` for example of config.toml
 
+Before usage you can generate or store in cert.pem and key.pem a certificate for SSL/TLS.
 
-API:
+For self-signed certificates you can run in app folder:
+`openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem`
+
+Then open browser with `https://host:port/buy/files` for see a page for buying files.
+
+## Service API:
 
 `GET /file.name?key=KEY` - getting file with name and generated key (must be exists in store cache and not expired)
 
