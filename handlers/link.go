@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"net/http"
@@ -8,10 +8,10 @@ import (
 func createLink(c *http.Request, fnb, key string) string {
 	u := &url.URL{}
 	*u = *c.URL
-	return createLinkFromURL(u, c.Host, fnb, key)
+	return CreateLinkFromURL(u, c.Host, fnb, key)
 }
 
-func createLinkFromURL(u *url.URL, host, fnb, key string) string {
+func CreateLinkFromURL(u *url.URL, host, fnb, key string) string {
 	u.Path = "/" + fnb
 	u.Host = host
 	u.Scheme = "https"
