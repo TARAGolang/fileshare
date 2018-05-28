@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/covrom/fileshare/config"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/BurntSushi/toml"
 	"github.com/covrom/fileshare/blacklist"
@@ -23,6 +24,8 @@ var (
 	testmode  = flag.Bool("t", false, "send testing mail with link to file")
 	testfile  = flag.String("f", "kanban.zip", "file for send testing mail")
 	testemail = flag.String("e", "rs@tsov.pro", "email for send testing mail")
+
+	sslmode = flag.String("ssl", "file", "ssl mode: 'auto' - automatically letsencrypt, 'file' - from cert.pem and key.pem, empty for http")
 
 	conf = &config.Conf{
 		Listen: ":443",
@@ -127,13 +130,17 @@ func main() {
 		}
 	})
 
-	// openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
-	e.Logger.Error(e.StartTLS(conf.Listen, "cert.pem", "key.pem"))
-
-	// e.AutoTLSManager.Cache = autocert.DirCache("./.cache")
-	// e.Logger.Error(e.StartAutoTLS(conf.Listen))
-
-	// e.Logger.Error(e.Start(conf.Listen))
+	switch *sslmode {
+	case "file":
+		// openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
+		e.Logger.Error(e.StartTLS(conf.Listen, "cert.pem", "key.pem"))
+	case "auto":
+		// LetsEncrypt automatically certificating
+		e.AutoTLSManager.Cache = autocert.DirCache("~/.filesharecache")
+		e.Logger.Error(e.StartAutoTLS(conf.Listen))
+	default:
+		e.Logger.Error(e.Start(conf.Listen))
+	}
 
 	if logf != nil {
 		logf.Close()
