@@ -54,7 +54,7 @@ func UploadFile(pth string, str *store.Store) func(c echo.Context) error {
 			if _, err = io.Copy(dst, src); err != nil {
 				return err
 			}
-			return c.String(http.StatusOK, createLink(c.Request(), fnb, str.Set(fn)))
+			return c.String(http.StatusOK, createLink(c.Request(), fnb, str.Set(fn, 1)))
 		}
 		return c.String(http.StatusBadRequest, "Bad request")
 	}

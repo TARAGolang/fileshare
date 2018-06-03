@@ -28,7 +28,7 @@ func TestMode(str *store.Store) {
 		"Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
 Ссылка действительна в течение одного дня!
 Если Вам не удается сачать файл, напишите пожалуйста письмо на %s`,
-			handlers.CreateLinkFromURL(u, "localhost", fnb, str.Set(fname)), conf.MailFrom)); err != nil {
+			handlers.CreateLinkFromURL(u, "localhost", fnb, str.Set(fname, *testdays)), conf.MailFrom)); err != nil {
 		fmt.Println(err.Error())
 	}
 

@@ -47,7 +47,7 @@ func YandexMoneyPush(elog echo.Logger, conf *config.Conf, str *store.Store) func
 			"Ссылка на загрузку "+fnb, fmt.Sprintf(`Ваша ссылка для скачивания %s
 Ссылка действительна в течение одного дня!
 Если Вам не удается сачать файл, напишите пожалуйста письмо на %s`,
-				createLink(c.Request(), fnb, str.Set(fname)), conf.MailFrom)); err != nil {
+				createLink(c.Request(), fnb, str.Set(fname, 1)), conf.MailFrom)); err != nil {
 			elog.Error(err.Error())
 			return c.NoContent(http.StatusOK)
 		}

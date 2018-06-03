@@ -27,7 +27,7 @@ func NewStore() *Store {
 	return s
 }
 
-func (s *Store) Set(fname string) string {
+func (s *Store) Set(fname string, days int) string {
 	s.Lock()
 	defer s.Unlock()
 
@@ -38,7 +38,7 @@ func (s *Store) Set(fname string) string {
 
 	s.Store[k] = Rec{
 		Fname: fname,
-		Exp:   time.Now().AddDate(0, 0, 1),
+		Exp:   time.Now().AddDate(0, 0, days),
 	}
 	return k
 }

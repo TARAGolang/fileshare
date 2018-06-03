@@ -22,6 +22,7 @@ var (
 	conffile = flag.String("c", "config.toml", "toml config file")
 
 	testmode  = flag.Bool("t", false, "send testing mail with link to file")
+	testdays  = flag.Int("d", 1, "testing mail link days to expiration")
 	testfile  = flag.String("f", "kanban.zip", "file for send testing mail")
 	testemail = flag.String("e", "rs@tsov.pro", "email for send testing mail")
 
