@@ -95,7 +95,7 @@ func main() {
 
 	e.GET("/:fname", handlers.GetFile(blist, str))
 
-	e.GET("/buy/files", handlers.BuyPage(conf.FixPrices))
+	e.GET("/buy/files", handlers.BuyPage(conf.FixPrices, conf.Descriptions))
 
 	g := e.Group("/newlink")
 

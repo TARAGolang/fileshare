@@ -22,4 +22,8 @@ MailPass = ""
 # fix prices for files
 [FixPrices]
     "kanban.zip" = "10000.00"
+    "donate.txt" = "100.00"
 
+[Descriptions]
+    "kanban.zip" = "Kanban board"
+    "donate.txt" = "Donate"

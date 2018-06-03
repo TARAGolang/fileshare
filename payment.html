@@ -21,25 +21,29 @@
                     <tr>
                         <th>Имя файла</th>
                         <th>Стоимость (руб.)</th>
+                        <th>Описание</th>
                         <th>Оплата</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {{range $key, $value := .}}
+                    {{range $value := .}}
                     <tr>
                         <td style="vertical-align: middle;">
-                            <p>{{$key}}</p>
+                            <p>{{$value.Key}}</p>
                         </td>
                         <td style="text-align: right; vertical-align: middle;">
-                            <p>{{$value}}</p>
+                            <p>{{$value.Price}}</p>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            <p>{{$value.Desc}}</p>
                         </td>
                         <td style="vertical-align: middle;">
                             <form method="POST" action="https://money.yandex.ru/quickpay/confirm.xml">
                                 <input type="hidden" name="receiver" value="41001851773851">
-                                <input type="hidden" name="label" value="{{$key}}">
+                                <input type="hidden" name="label" value="{{$value.Key}}">
                                 <input type="hidden" name="quickpay-form" value="shop">
-                                <input type="hidden" name="targets" value="Оплата за {{$key}}">
-                                <input type="hidden" name="sum" value="{{$value}}" data-type="number">
+                                <input type="hidden" name="targets" value="Оплата за {{$value.Key}}">
+                                <input type="hidden" name="sum" value="{{$value.Price}}" data-type="number">
                                 <input type="hidden" name="need-fio" value="true">
                                 <input type="hidden" name="need-email" value="true">
                                 <input type="hidden" name="need-phone" value="false">

@@ -18,4 +18,6 @@ type Conf struct {
 	MailSrv  string
 	// fix prices for files, if not defined then any payment allow
 	FixPrices map[string]string
+	// descriptions for files
+	Descriptions map[string]string
 }
