@@ -137,7 +137,7 @@ func main() {
 		e.Logger.Error(e.StartTLS(conf.Listen, "cert.pem", "key.pem"))
 	case "auto":
 		// LetsEncrypt automatically certificating
-		e.AutoTLSManager.Cache = autocert.DirCache("~/.filesharecache")
+		e.AutoTLSManager.Cache = autocert.DirCache(".cache")
 		e.Logger.Error(e.StartAutoTLS(conf.Listen))
 	default:
 		e.Logger.Error(e.Start(conf.Listen))
