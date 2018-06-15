@@ -67,7 +67,7 @@ func (l *BlackList) Clear() {
 		for k, v := range l.m {
 			// ban one day
 			log.Println("Banned", k)
-			if v.cnt >= banCnt && time.Now().After(v.la.Add(banHrs*time.Hour)) {
+			if (v.cnt >= banCnt && time.Now().After(v.la.Add(banHrs*time.Hour))) || v.cnt < banCnt {
 				delete(l.m, k)
 			}
 		}
