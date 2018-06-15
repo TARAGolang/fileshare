@@ -104,11 +104,12 @@ func main() {
 		if len(ip) == 0 {
 			ip = ctx.Request().RemoteAddr
 		}
+		if username == "admin" && password == conf.AdminPassword {
+			blist.White(ip)
+			return true, nil
+		}
 		if blist.IsBlack(ip) {
 			return false, nil
-		}
-		if username == "admin" && password == conf.AdminPassword {
-			return true, nil
 		}
 		blist.PaintBlack(ip)
 		return false, nil

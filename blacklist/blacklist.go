@@ -60,6 +60,14 @@ func (l *BlackList) PaintBlack(ip string) bool {
 
 }
 
+func (l *BlackList) White(ip string) {
+	l.Lock()
+	if _, ok := l.m[ip]; ok {
+		delete(l.m, ip)
+	}
+	l.Unlock()
+}
+
 func (l *BlackList) Clear() {
 	tick := time.Tick(time.Hour)
 	for range tick {
